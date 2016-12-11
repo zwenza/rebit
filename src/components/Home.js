@@ -6,10 +6,8 @@ export default class Home extends React.Component{
       super();
 
       this.state = {
-        fitbiturl:  "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=" + config.client_id +
-                    "&redirect_uri=" + config.redirect_uri +
-                    "&scope=" + config.scope +
-                    "&expires_in=" + config.expires_in
+        fitbiturl:  `https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=${config.client_id}` +
+                    `&redirect_uri=${config.redirect_uri}&scope=${config.scope}&expires_in=${config.expires_in}`
       }
   }
 
