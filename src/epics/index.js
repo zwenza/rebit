@@ -1,4 +1,4 @@
-import { getHeartrate } from './heartrate'
+import { getHeartrate } from './data'
 import { combineEpics } from 'redux-observable'
 
 const rootEpic = combineEpics(
