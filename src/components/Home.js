@@ -1,5 +1,6 @@
 import React from 'react'
 import { config } from '../constants/FitbitConfig'
+import { Row, Col, Button, Card } from 'antd'
 
 export default class Home extends React.Component{
   constructor(){
@@ -11,11 +12,24 @@ export default class Home extends React.Component{
       }
   }
 
+  redirectToFitbit = () => {
+    window.location = this.state.fitbiturl;
+  }
+
   render(){
     return(
       <div>
-        <h1>Rebit</h1>
-        <a href={this.state.fitbiturl}>Login with Fitbit!</a>
+        <Row>
+          <Col offset={9} span={6}>
+            <br/>
+            <Card>
+                <h1>Rebit</h1>
+                <p>a better way to read your fitness data</p>
+                <br/>
+                <Button type="primary" onClick={this.redirectToFitbit}>login with fitbit</Button>
+              </Card>
+          </Col>
+        </Row>
       </div>
     );
   }

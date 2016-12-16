@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard'
 import Auth from './containers/Auth'
 import Home from './components/Home'
 import _ from 'lodash'
+import 'antd/dist/antd.css'
 
 const requireAuthentication = (nextState, transition) => {
   if(_.isEmpty(store.getState().auth)){
