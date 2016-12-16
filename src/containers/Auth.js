@@ -6,6 +6,8 @@ import { Link } from 'react-router';
 
 class Auth extends React.Component{
   componentDidMount() {
+    //TODO refactor this component to React-Router onEnter authentication
+    
     // parse fitbit auth-data
     const parameters = this.props.location.hash.slice(1).split(/[=&]/);
     let values = Object.create(null);
