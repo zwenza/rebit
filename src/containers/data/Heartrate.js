@@ -21,14 +21,6 @@ class Heartrate extends React.Component{
     });
   }
 
-  data = {
-    heartrate: [
-      {rate: 120},
-      {rate: 160},
-      {rate: 130}
-    ]
-  }
-
   render(){
     const restingHeartRate = this.extractRestingHeartRate();
 
