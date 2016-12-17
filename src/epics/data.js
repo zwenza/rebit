@@ -5,7 +5,7 @@ import 'rxjs';
 export const getHeartrate = (action$, store) => action$
   .ofType(ActionTypes.GET_HEART_RATE)
   .switchMap(data => Observable.ajax({
-      url: 'https://api.fitbit.com/1/user/' + data.payload.userId + '/activities/heart/date/today/1d.json',
+      url: 'https://api.fitbit.com/1/user/' + data.payload.userId + '/activities/heart/date/2016-12-01/1w.json',
       headers: {
         'Authorization': 'Bearer ' + data.payload.accessToken
       },
