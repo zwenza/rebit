@@ -10,11 +10,11 @@ class Heartrate extends React.Component{
     super(props);
   }
 
-  loadHeartRateData = () => {
+  componentDidMount() {
     const { user_id, access_token } = this.props.auth;
     this.props.actions.fetchHeartRateData(user_id, access_token);
   }
-
+  
   extractRestingHeartRate = () => {
     return _.map(this.props.data, function(heartRateDay) {
       return { restRate: heartRateDay.value.restingHeartRate };
@@ -26,8 +26,6 @@ class Heartrate extends React.Component{
 
     return(
       <div>
-        <h2>Fetch your heartrate!</h2>
-        <button onClick={this.loadHeartRateData}>Fetch</button>
         <h3>resting heart-rate</h3>
         <LineChart width={730} height={500} data={restingHeartRate}>
           <Line type="monotone" dataKey="restRate" stroke="#8884d8" />
