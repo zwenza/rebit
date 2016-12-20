@@ -11,18 +11,23 @@ class Heartrate extends React.Component{
   }
 
   componentDidMount() {
-    const { user_id, access_token } = this.props.auth;
-    this.props.actions.fetchHeartRateData(user_id, access_token);
+    // check if we didn't load the heart-rate data yet
+    if(_.isEmpty(this.extractRestingHeartRate())){
+      const { user_id, access_token } = this.props.auth;
+      this.props.actions.fetchHeartRateData(user_id, access_token);
+    }
   }
-  
-  extractRestingHeartRate = () => {
-    return _.map(this.props.data, function(heartRateDay) {
-      return { restRate: heartRateDay.value.restingHeartRate };
-    });
+
+  /**
+   * @returns mapped heart-rate data for displaying in the chart
+   */
+  extractHeartRateData = () => {
+    //TODO also map other heart-rate data too (not just resting-rate)
+    return _.map(this.props.data, (heartRateDay) => { return { restRate: heartRateDay.value.restingHeartRate } });
   }
 
   render(){
-    const restingHeartRate = this.extractRestingHeartRate();
+    const restingHeartRate = this.extractHeartRateData();
 
     return(
       <div>
