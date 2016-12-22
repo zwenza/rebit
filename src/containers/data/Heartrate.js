@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import * as DataActions from '../../actions/data'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts'
 import _ from 'lodash'
-import { Tabs, Card, Icon, Radio, Alert, Progress, Spin } from 'antd'
+import { Tabs, Card, Icon, Radio, Alert, Spin } from 'antd'
 import styled from 'styled-components'
 
 const TabPane = Tabs.TabPane;
@@ -39,8 +39,7 @@ class Heartrate extends React.Component{
   componentDidMount() {
     // check if we didn't load the heart-rate data yet
     if(_.isEmpty(this.extractHeartRateData())){
-      const { user_id, access_token } = this.props.auth;
-      this.props.actions.fetchHeartRateData(user_id, access_token, '1d');
+      this.props.actions.fetchHeartRateData('1d');
     }
   }
 
@@ -59,21 +58,18 @@ class Heartrate extends React.Component{
   changeTimeFrame = event => {
     event.preventDefault();
 
-    if(this.props.dataTimeFrame === event.target.value){
-      return;
+    if(this.props.dataTimeFrame !== event.target.value){
+      let timeFrame;
+      switch(event.target.value){
+        case 'week': timeFrame = '1w'; break;
+        case 'month': timeFrame = '1m'; break;
+        case 'day':
+        default: timeFrame = '1d'; 
+      }
+
+      this.props.actions.setDataTimeFrame(event.target.value);
+      this.props.actions.fetchHeartRateData(timeFrame);
     }
-
-    const { user_id, access_token } = this.props.auth;
-
-    let timeFrame;
-    switch(event.target.value){
-      case 'day': timeFrame = '1d'; break;
-      case 'week': timeFrame = '1w'; break;
-      case 'month': timeFrame = '1m'; break;
-    }
-
-    this.props.actions.setDataTimeFrame(event.target.value);
-    this.props.actions.fetchHeartRateData(user_id, access_token, timeFrame);
   }
 
   render(){
@@ -127,7 +123,6 @@ Heartrate.defaultProps = {
 
 const mapStateToProps = state => {
   return {
-    auth: state.auth,
     data: state.data['activities-heart'],
     loading: state.data.loading,
     dataTimeFrame: state.data.dataTimeFrame

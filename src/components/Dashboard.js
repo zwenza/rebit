@@ -1,6 +1,6 @@
 import React from 'react'
 import Heartrate from '../containers/data/Heartrate'
-import { Row, Col, Tabs, Card } from 'antd'
+import { Row, Col } from 'antd'
 
 export default class Dashboard extends React.Component{
   render(){
