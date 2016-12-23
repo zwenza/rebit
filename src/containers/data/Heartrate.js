@@ -26,7 +26,6 @@ const CardContent = styled.div`
   padding-bottom: 25px;
 `
 
-
 class Heartrate extends React.Component{
   constructor(props){
     super(props);
@@ -51,10 +50,16 @@ class Heartrate extends React.Component{
     return _.map(this.props.data, (heartRateDay) => { return { restRate: heartRateDay.value.restingHeartRate, date: heartRateDay.dateTime } });
   }
 
+  /**
+   * @returns if every day in the selected time-frame doesnt have a record returns false else true
+   */
   checkIfNoDataFound = extractedData => {
     return _.size(extractedData) === _.size(_.filter(extractedData, {restRate: undefined}));
   }
 
+  /**
+   * changes the current time-frame selection and fetches new data if time-frame has changed
+   */
   changeTimeFrame = event => {
     event.preventDefault();
 
@@ -64,7 +69,7 @@ class Heartrate extends React.Component{
         case 'week': timeFrame = '1w'; break;
         case 'month': timeFrame = '1m'; break;
         case 'day':
-        default: timeFrame = '1d'; 
+        default: timeFrame = '1d';
       }
 
       this.props.actions.setDataTimeFrame(event.target.value);
@@ -72,9 +77,41 @@ class Heartrate extends React.Component{
     }
   }
 
-  render(){
+  renderRestingHeartRate = () => {
     const restingHeartRate = this.extractHeartRateData();
 
+    return <TabPane tab="resting" key="1">
+        {
+          // check if there is data for the selected time-frame
+          this.checkIfNoDataFound(restingHeartRate) ?
+            // if not render error
+            <Alert
+              style={{textAlign: 'left'}}
+              message="no data"
+              description="We could't find any data for this time-frame. Are you sure that you synced your data?"
+              type="warning"
+              showIcon /> :
+            // if there is data then check if data is currently loading
+            !this.props.loading ?
+              // if not loading render the data
+              this.renderLineChart(restingHeartRate) :
+              // if loading render a loading-spinner
+              <Spin style={{padding: 25}} size="large" />
+        }
+    </TabPane>
+  }
+
+  renderLineChart = restingHeartRate => {
+    return <ResponsiveContainer aspect={3}>
+      <LineChart data={restingHeartRate}>
+        <XAxis dataKey="date" />
+        <YAxis domain={['dataMin-2', 'dataMax+2']} />
+        <Line type="monotone" dataKey="restRate" stroke="#9b0000" dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  }
+
+  render(){
     return(
       <Card bodyStyle={{padding:0, borderColor:'green'}}>
         <CardContent>
@@ -82,27 +119,7 @@ class Heartrate extends React.Component{
 
           <CardBody>
             <Tabs defaultActiveKey="1">
-              <TabPane tab="resting" key="1">
-                  {
-                    this.checkIfNoDataFound(restingHeartRate) ?
-                    <Alert
-                      style={{textAlign: 'left'}}
-                      message="no data"
-                      description="We could't find any data for this time-frame. Are you sure that you synced your data?"
-                      type="warning"
-                      showIcon
-                    /> :
-                      !this.props.loading ?
-                      <ResponsiveContainer aspect={3}>
-                        <LineChart data={restingHeartRate}>
-                          <XAxis dataKey="date" />
-                          <YAxis domain={['dataMin-2', 'dataMax+2']} />
-                          <Line type="monotone" dataKey="restRate" stroke="#9b0000" dot={false} />
-                        </LineChart>
-                      </ResponsiveContainer> :
-                      <Spin style={{padding: 25}} size="large" />
-                  }
-              </TabPane>
+              { this.renderRestingHeartRate() }
             </Tabs>
           </CardBody>
 
