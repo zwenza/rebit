@@ -5,7 +5,7 @@ const initialState = {}
 export default function data(state = initialState, action) {
   switch (action.type) {
     case SET_DATA_TIME_FRAME:
-      return Object.assign({}, state, action.payload);
+      return Object.assign({}, state, { loading: true }, action.payload);
     case GET_HEART_RATE:
       return Object.assign({}, state, { loading: true });
     case GET_HEART_RATE_SUCCESS:

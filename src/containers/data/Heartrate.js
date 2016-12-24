@@ -6,7 +6,11 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts'
 import _ from 'lodash'
 import { Tabs, Card, Icon, Radio, Alert, Spin } from 'antd'
 import styled from 'styled-components'
+import { DatePicker } from 'antd'
+import moment from 'moment'
+import enUS from 'antd/lib/date-picker/locale/en_US';
 
+const { RangePicker } = DatePicker;
 const TabPane = Tabs.TabPane;
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
@@ -38,7 +42,12 @@ class Heartrate extends React.Component{
   componentDidMount() {
     // check if we didn't load the heart-rate data yet
     if(_.isEmpty(this.extractHeartRateData())){
-      this.props.actions.fetchHeartRateData('1d');
+      if(!_.isEmpty(this.props.dataTimeFrame)){
+        this.props.actions.fetchHeartRateData(this.props.dataTimeFrame);
+      } else {
+        this.props.actions.setDataTimeFrame([moment().format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')]);
+        this.props.actions.fetchHeartRateData([moment().format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')]);
+      }
     }
   }
 
@@ -46,34 +55,42 @@ class Heartrate extends React.Component{
    * @returns mapped heart-rate data for displaying in the chart
    */
   extractHeartRateData = () => {
-    //TODO also map other heart-rate data too (not just resting-rate)
-    return _.map(this.props.data, (heartRateDay) => { return { restRate: heartRateDay.value.restingHeartRate, date: heartRateDay.dateTime } });
+    if(_.isEmpty(this.props.data) && _.isEmpty(this.props.intradayData)){
+      return;
+    }
+
+    if(moment(this.props.dataTimeFrame[1]).diff(moment(this.props.dataTimeFrame[0]), 'days') > 1){
+        return _.map(this.props.data, heartRateForIntervall => { return { heartRate: heartRateForIntervall.value.restingHeartRate } });
+    }
+    return _.map(this.props.intradayData['dataset'], heartRateForIntervall => { return { heartRate: heartRateForIntervall.value } });
   }
 
   /**
    * @returns if every day in the selected time-frame doesnt have a record returns false else true
    */
   checkIfNoDataFound = extractedData => {
-    return _.size(extractedData) === _.size(_.filter(extractedData, {restRate: undefined}));
+    return _.size(extractedData) === _.size(_.filter(extractedData, {heartRate: undefined}));
   }
 
   /**
    * changes the current time-frame selection and fetches new data if time-frame has changed
    */
-  changeTimeFrame = event => {
-    event.preventDefault();
+  changeTimeFrame = timeFrame => {
+    const formattedStart = timeFrame[0].format('YYYY-MM-DD');
+    const formattedEnd = timeFrame[1].format('YYYY-MM-DD');
 
-    if(this.props.dataTimeFrame !== event.target.value){
-      let timeFrame;
-      switch(event.target.value){
-        case 'week': timeFrame = '1w'; break;
-        case 'month': timeFrame = '1m'; break;
-        case 'day':
-        default: timeFrame = '1d';
-      }
+    // check if selected time-frame is equal to already selected time-frame
+    if(this.props.dataTimeFrame[0] === formattedStart &&
+    this.props.dataTimeFrame[1] === formattedEnd){
+      return;
+    }
 
-      this.props.actions.setDataTimeFrame(event.target.value);
-      this.props.actions.fetchHeartRateData(timeFrame);
+    // if not refresh the selected time-frame and reload the heart-rate data
+    this.props.actions.setDataTimeFrame([formattedStart, formattedEnd]);
+    if(timeFrame[1].diff(timeFrame[0], 'days') > 1){
+      this.props.actions.fetchHeartRateData([formattedStart, formattedEnd]);
+    } else {
+      this.props.actions.fetchHeartRateIntraDayData([formattedStart, formattedEnd]);
     }
   }
 
@@ -104,9 +121,9 @@ class Heartrate extends React.Component{
   renderLineChart = restingHeartRate => {
     return <ResponsiveContainer aspect={3}>
       <LineChart data={restingHeartRate}>
-        <XAxis dataKey="date" />
+        <XAxis />
         <YAxis domain={['dataMin-2', 'dataMax+2']} />
-        <Line type="monotone" dataKey="restRate" stroke="#9b0000" dot={false} />
+        <Line type="monotone" dataKey="heartRate" stroke="#9b0000" dot={false} />
       </LineChart>
     </ResponsiveContainer>
   }
@@ -123,11 +140,14 @@ class Heartrate extends React.Component{
             </Tabs>
           </CardBody>
 
-          <RadioGroup onChange={this.changeTimeFrame} defaultValue={this.props.dataTimeFrame}>
-            <RadioButton value="day">day</RadioButton>
-            <RadioButton value="week">week</RadioButton>
-            <RadioButton value="month">month</RadioButton>
-          </RadioGroup>
+          <RangePicker
+            onChange={this.changeTimeFrame}
+            locale={enUS}
+            defaultValue={[moment(this.props.dataTimeFrame[0]), moment(this.props.dataTimeFrame[1])]}
+            ranges={{ 'Today': [moment(), moment()],
+              'This week': [moment().startOf('week'), moment().endOf('week')],
+              'This month': [moment().startOf('month'), moment().endOf('month')] }}
+            format="DD/MM/YYYY" />
         </CardContent>
       </Card>
     );
@@ -141,6 +161,7 @@ Heartrate.defaultProps = {
 const mapStateToProps = state => {
   return {
     data: state.data['activities-heart'],
+    intradayData: state.data['activities-heart-intraday'],
     loading: state.data.loading,
     dataTimeFrame: state.data.dataTimeFrame
   }
