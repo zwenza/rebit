@@ -55,14 +55,14 @@ class Heartrate extends React.Component{
    * @returns mapped heart-rate data for displaying in the chart
    */
   extractHeartRateData = () => {
-    if(_.isEmpty(this.props.data)){
+    if(_.isEmpty(this.props.data) && _.isEmpty(this.props.intradayData)){
       return;
     }
 
     if(moment(this.props.dataTimeFrame[1]).diff(moment(this.props.dataTimeFrame[0]), 'days') > 1){
         return _.map(this.props.data, heartRateForIntervall => { return { heartRate: heartRateForIntervall.value.restingHeartRate } });
     }
-    return _.map(this.props.data['dataset'], heartRateForIntervall => { return { heartRate: heartRateForIntervall.value } });
+    return _.map(this.props.intradayData['dataset'], heartRateForIntervall => { return { heartRate: heartRateForIntervall.value } });
   }
 
   /**
@@ -143,7 +143,7 @@ class Heartrate extends React.Component{
           <RangePicker
             onChange={this.changeTimeFrame}
             locale={enUS}
-            defaultValue={[moment(), moment()]}
+            defaultValue={[moment(this.props.dataTimeFrame[0]), moment(this.props.dataTimeFrame[1])]}
             ranges={{ 'Today': [moment(), moment()],
               'This week': [moment().startOf('week'), moment().endOf('week')],
               'This month': [moment().startOf('month'), moment().endOf('month')] }}
@@ -160,7 +160,8 @@ Heartrate.defaultProps = {
 
 const mapStateToProps = state => {
   return {
-    data: state.data['activities-heart-intraday'],
+    data: state.data['activities-heart'],
+    intradayData: state.data['activities-heart-intraday'],
     loading: state.data.loading,
     dataTimeFrame: state.data.dataTimeFrame
   }
