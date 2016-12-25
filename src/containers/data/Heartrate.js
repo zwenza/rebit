@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import * as DataActions from '../../actions/data'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts'
 import _ from 'lodash'
-import { Tabs, Card, Icon, Radio, Alert, Spin } from 'antd'
+import { Tabs, Card, Icon, Alert, Spin } from 'antd'
 import styled from 'styled-components'
 import { DatePicker } from 'antd'
 import moment from 'moment'
@@ -12,8 +12,6 @@ import enUS from 'antd/lib/date-picker/locale/en_US';
 
 const { RangePicker } = DatePicker;
 const TabPane = Tabs.TabPane;
-const RadioButton = Radio.Button;
-const RadioGroup = Radio.Group;
 
 /* styling components */
 const CardHeader = styled.div`
@@ -33,10 +31,6 @@ const CardContent = styled.div`
 class Heartrate extends React.Component{
   constructor(props){
     super(props);
-
-    this.state = {
-      selectedTimeFrame: 'day'
-    };
   }
 
   componentDidMount() {
@@ -94,6 +88,12 @@ class Heartrate extends React.Component{
     }
   }
 
+  getDefaultDate = () => {
+    const from = this.props.dataTimeFrame !== undefined ? moment(this.props.dataTimeFrame[0]) : moment();
+    const to = this.props.dataTimeFrame !== undefined ? moment(this.props.dataTimeFrame[1]): moment();
+    return [from, to];
+  }
+
   renderRestingHeartRate = () => {
     const restingHeartRate = this.extractHeartRateData();
 
@@ -129,6 +129,8 @@ class Heartrate extends React.Component{
   }
 
   render(){
+    const defaultDate = this.getDefaultDate();
+
     return(
       <Card bodyStyle={{padding:0, borderColor:'green'}}>
         <CardContent>
@@ -143,7 +145,7 @@ class Heartrate extends React.Component{
           <RangePicker
             onChange={this.changeTimeFrame}
             locale={enUS}
-            defaultValue={[moment(this.props.dataTimeFrame[0]), moment(this.props.dataTimeFrame[1])]}
+            defaultValue={defaultDate}
             ranges={{ 'Today': [moment(), moment()],
               'This week': [moment().startOf('week'), moment().endOf('week')],
               'This month': [moment().startOf('month'), moment().endOf('month')] }}
@@ -155,7 +157,7 @@ class Heartrate extends React.Component{
 }
 
 Heartrate.defaultProps = {
-  dataTimeFrame: 'day'
+  dataTimeFrame: [moment().format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')]
 }
 
 const mapStateToProps = state => {

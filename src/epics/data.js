@@ -35,7 +35,7 @@ export const getHeartrate = (action$, store) => action$
 export const getHeartrateIntraDay = (action$, store) => action$
   .ofType(ActionTypes.GET_HEART_RATE_INTRADAY)
   .switchMap(data => Observable.ajax({
-      url: 'https://api.fitbit.com/1/user/' +  store.getState().auth.user_id + '/activities/heart/date/' + data.payload.timeFrame[0] + '/' + data.payload.timeFrame[1] + '/1min' + '.json',
+      url: 'https://api.fitbit.com/1/user/' +  store.getState().auth.user_id + '/activities/heart/date/' + data.payload.timeFrame[0] + '/' + data.payload.timeFrame[1] + '/1min.json',
       headers: {
         'Authorization': 'Bearer ' + store.getState().auth.access_token
       },
