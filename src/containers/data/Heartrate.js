@@ -94,28 +94,30 @@ class Heartrate extends React.Component{
     return firstDay.diff(secondDay, 'days') <= 1;
   }
 
-  renderRestingHeartRate = () => {
-    const restingHeartRate = this.extractHeartRateData();
+  renderHeartRate = () => {
+    const heartRate = this.extractHeartRateData();
 
-    return this.checkIfNoDataFound(restingHeartRate) ?
-            // if not render error
-            <Alert
-              style={{textAlign: 'left'}}
-              message="no data"
-              description="We could't find any data for this time-frame. Are you sure that you synced your data?"
-              type="warning"
-              showIcon /> :
-            // if there is data then check if data is currently loading
-            !this.props.loading ?
-              // if not loading render the data
-              this.renderLineChart(restingHeartRate) :
-              // if loading render a loading-spinner
-              <Spin style={{padding: 25}} size="large" />
+    if(this.checkIfNoDataFound(heartRate)){
+      // if no data found render error
+      return <Alert style={{textAlign: 'left'}}
+                    message="no data"
+                    description="We could't find any data for this time-frame. Are you sure that you synced your data?"
+                    type="warning" showIcon />
+    } else {
+      // if there is data then check if data is currently loading
+      if(!this.props.loading){
+        // if not loading render the data
+        return this.renderLineChart(heartRate)
+      } else {
+        // if loading render a loading-spinner
+        return <Spin style={{padding: 25}} size="large" />
+      }
+    }
   }
 
-  renderLineChart = restingHeartRate => {
+  renderLineChart = heartRate => {
     return <ResponsiveContainer aspect={3}>
-      <LineChart data={restingHeartRate}>
+      <LineChart data={heartRate}>
         <XAxis />
         <YAxis domain={['dataMin-2', 'dataMax+2']} />
         <Line type="monotone" dataKey="heartRate" stroke="#9b0000" dot={false} />
@@ -130,7 +132,7 @@ class Heartrate extends React.Component{
           <CardHeader><Icon type="heart" /><b> heart-rate</b></CardHeader>
 
           <CardBody>
-            { this.renderRestingHeartRate() }
+            { this.renderHeartRate() }
           </CardBody>
 
           <RangePicker
