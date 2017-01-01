@@ -1,17 +1,17 @@
 import React from 'react'
+import styled from 'styled-components'
+import moment from 'moment'
+import _ from 'lodash'
+
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import * as DataActions from '../../actions/data'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts'
-import _ from 'lodash'
-import { Tabs, Card, Icon, Alert, Spin } from 'antd'
-import styled from 'styled-components'
-import { DatePicker } from 'antd'
-import moment from 'moment'
+import { Card, Icon, Alert, Spin, DatePicker } from 'antd'
 import enUS from 'antd/lib/date-picker/locale/en_US';
 
+import * as DataActions from '../../actions/data'
+
 const { RangePicker } = DatePicker;
-const TabPane = Tabs.TabPane;
 
 /* styling components */
 const CardHeader = styled.div`
@@ -36,31 +36,27 @@ class Heartrate extends React.Component{
   componentDidMount() {
     // check if we didn't load the heart-rate data yet
     if(_.isEmpty(this.extractHeartRateData())){
-      if(!_.isEmpty(this.props.dataTimeFrame)){
-        this.props.actions.fetchHeartRateData(this.props.dataTimeFrame);
-      } else {
-        this.props.actions.setDataTimeFrame([moment().format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')]);
-        this.props.actions.fetchHeartRateData([moment().format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')]);
-      }
+      this.props.actions.fetchHeartRateData(this.props.dataTimeFrame);
     }
   }
 
   /**
-   * @returns mapped heart-rate data for displaying in the chart
+   * @returns {array} mapped heart-rate data for displaying in the chart
    */
   extractHeartRateData = () => {
     if(_.isEmpty(this.props.data) && _.isEmpty(this.props.intradayData)){
       return;
     }
 
-    if(moment(this.props.dataTimeFrame[1]).diff(moment(this.props.dataTimeFrame[0]), 'days') > 1){
-        return _.map(this.props.data, heartRateForIntervall => { return { heartRate: heartRateForIntervall.value.restingHeartRate } });
+    if(this.shouldDisplayIntraday(this.props.dataTimeFrame[1], this.props.dataTimeFrame[0])){
+      return _.map(this.props.intradayData['dataset'], heartRateForIntervall => { return { heartRate: heartRateForIntervall.value } });
+    } else {
+      return _.map(this.props.data, heartRateForIntervall => { return { heartRate: heartRateForIntervall.value.restingHeartRate } });
     }
-    return _.map(this.props.intradayData['dataset'], heartRateForIntervall => { return { heartRate: heartRateForIntervall.value } });
   }
 
   /**
-   * @returns if every day in the selected time-frame doesnt have a record returns false else true
+   * @returns {boolean} true: every day in the selected time-frame doesnt have a record
    */
   checkIfNoDataFound = extractedData => {
     return _.size(extractedData) === _.size(_.filter(extractedData, {heartRate: undefined}));
@@ -74,24 +70,28 @@ class Heartrate extends React.Component{
     const formattedEnd = timeFrame[1].format('YYYY-MM-DD');
 
     // check if selected time-frame is equal to already selected time-frame
-    if(this.props.dataTimeFrame[0] === formattedStart &&
-    this.props.dataTimeFrame[1] === formattedEnd){
+    if(this.props.dataTimeFrame[0].isSame(timeFrame[0]) && this.props.dataTimeFrame[1].isSame(timeFrame[1])){
       return;
     }
 
     // if not refresh the selected time-frame and reload the heart-rate data
-    this.props.actions.setDataTimeFrame([formattedStart, formattedEnd]);
-    if(timeFrame[1].diff(timeFrame[0], 'days') > 1){
-      this.props.actions.fetchHeartRateData([formattedStart, formattedEnd]);
-    } else {
+    this.props.actions.setDataTimeFrame(timeFrame);
+    if(this.shouldDisplayIntraday(timeFrame[1], timeFrame[0])){
       this.props.actions.fetchHeartRateIntraDayData([formattedStart, formattedEnd]);
+    } else {
+      this.props.actions.fetchHeartRateData([formattedStart, formattedEnd]);
     }
   }
 
-  getDefaultDate = () => {
-    const from = this.props.dataTimeFrame !== undefined ? moment(this.props.dataTimeFrame[0]) : moment();
-    const to = this.props.dataTimeFrame !== undefined ? moment(this.props.dataTimeFrame[1]): moment();
-    return [from, to];
+  /**
+   * returns if there is only one day difference between two dates to
+   * decide if the data should be displayed as intraday or more days.
+   * @param {moment} firstDay   first day - must be before secondDay
+   * @param {moment} secondDay  second day
+   * @returns {boolean} true: if diff is max. one day, false: if diff is more than one day
+   */
+  shouldDisplayIntraday = (firstDay, secondDay) => {
+    return firstDay.diff(secondDay, 'days') <= 1;
   }
 
   renderRestingHeartRate = () => {
@@ -124,8 +124,6 @@ class Heartrate extends React.Component{
   }
 
   render(){
-    const defaultDate = this.getDefaultDate();
-
     return(
       <Card bodyStyle={{padding:0, borderColor:'green'}}>
         <CardContent>
@@ -138,7 +136,7 @@ class Heartrate extends React.Component{
           <RangePicker
             onChange={this.changeTimeFrame}
             locale={enUS}
-            defaultValue={defaultDate}
+            defaultValue={this.props.dataTimeFrame}
             ranges={{ 'Today': [moment(), moment()],
               'This week': [moment().startOf('week'), moment().endOf('week')],
               'This month': [moment().startOf('month'), moment().endOf('month')] }}
@@ -149,16 +147,12 @@ class Heartrate extends React.Component{
   }
 }
 
-Heartrate.defaultProps = {
-  dataTimeFrame: [moment().format('YYYY-MM-DD'), moment().format('YYYY-MM-DD')]
-}
-
 const mapStateToProps = state => {
   return {
     data: state.data['activities-heart'],
     intradayData: state.data['activities-heart-intraday'],
     loading: state.data.loading,
-    dataTimeFrame: state.data.dataTimeFrame
+    dataTimeFrame: Array.isArray(state.data.dataTimeFrame) ? [moment(state.data.dataTimeFrame[0]), moment(state.data.dataTimeFrame[1])] : [moment(), moment()]
   }
 }
 
