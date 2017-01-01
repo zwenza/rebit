@@ -34,9 +34,16 @@ class Heartrate extends React.Component{
   }
 
   componentDidMount() {
+    const formattedStart = moment(this.props.dataTimeFrame[0]).format('YYYY-MM-DD');
+    const formattedEnd = moment(this.props.dataTimeFrame[1]).format('YYYY-MM-DD');
+
     // check if we didn't load the heart-rate data yet
     if(_.isEmpty(this.extractHeartRateData())){
-      this.props.actions.fetchHeartRateData(this.props.dataTimeFrame);
+      if(this.shouldDisplayIntraday(this.props.dataTimeFrame[1], this.props.dataTimeFrame[0])){
+        this.props.actions.fetchHeartRateIntraDayData([formattedStart, formattedEnd]);
+      } else {
+        this.props.actions.fetchHeartRateData([formattedStart, formattedEnd]);
+      }
     }
   }
 
