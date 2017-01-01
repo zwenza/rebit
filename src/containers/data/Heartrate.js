@@ -58,7 +58,7 @@ class Heartrate extends React.Component{
     if(this.shouldDisplayIntraday(this.props.dataTimeFrame[1], this.props.dataTimeFrame[0])){
       return _.map(this.props.intradayData['dataset'], heartRateForIntervall => { return { heartRate: heartRateForIntervall.value } });
     } else {
-      return _.map(this.props.data, heartRateForIntervall => { return { heartRate: heartRateForIntervall.value.restingHeartRate } });
+      return _.map(this.props.data, heartRateForIntervall => { return { heartRate: heartRateForIntervall.value.restingHeartRate, day: heartRateForIntervall.dateTime } });
     }
   }
 
@@ -123,9 +123,11 @@ class Heartrate extends React.Component{
   }
 
   renderLineChart = heartRate => {
+    const displayIntraday = this.shouldDisplayIntraday(this.props.dataTimeFrame[1], this.props.dataTimeFrame[0]);
+    
     return <ResponsiveContainer aspect={3}>
       <LineChart data={heartRate}>
-        <XAxis />
+        <XAxis minTickGap={8} tick={!displayIntraday} tickLine={!displayIntraday} dataKey={!displayIntraday ? "day" : undefined} />
         <YAxis domain={['dataMin-2', 'dataMax+2']} />
         <Line type="monotone" dataKey="heartRate" stroke="#9b0000" dot={false} />
       </LineChart>
