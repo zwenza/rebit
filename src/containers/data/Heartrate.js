@@ -97,10 +97,7 @@ class Heartrate extends React.Component{
   renderRestingHeartRate = () => {
     const restingHeartRate = this.extractHeartRateData();
 
-    return <TabPane tab="resting" key="1">
-        {
-          // check if there is data for the selected time-frame
-          this.checkIfNoDataFound(restingHeartRate) ?
+    return this.checkIfNoDataFound(restingHeartRate) ?
             // if not render error
             <Alert
               style={{textAlign: 'left'}}
@@ -114,8 +111,6 @@ class Heartrate extends React.Component{
               this.renderLineChart(restingHeartRate) :
               // if loading render a loading-spinner
               <Spin style={{padding: 25}} size="large" />
-        }
-    </TabPane>
   }
 
   renderLineChart = restingHeartRate => {
@@ -137,9 +132,7 @@ class Heartrate extends React.Component{
           <CardHeader><Icon type="heart" /><b> heart-rate</b></CardHeader>
 
           <CardBody>
-            <Tabs defaultActiveKey="1">
-              { this.renderRestingHeartRate() }
-            </Tabs>
+            { this.renderRestingHeartRate() }
           </CardBody>
 
           <RangePicker
